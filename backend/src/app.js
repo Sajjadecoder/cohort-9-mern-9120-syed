@@ -10,7 +10,6 @@ const allowedOrigins = [
 ];
 
 
-// Middleware
 app.use(cors(
     {
         origin: allowedOrigins,
@@ -20,7 +19,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-// Health Check
+
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,

@@ -1,54 +1,39 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../models/index.js";
+import ApiError from "../utils/ApiError.js";
 
 export const registerUser = async ({ name, email, password }) => {
-  // Validate input
   if (!name || !email || !password) {
-    throw {
-      status: 400,
-      message: "All fields are required",
-    };
+    throw new ApiError(400, "All fields are required");
   }
 
-  // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (!emailRegex.test(email)) {
-    throw {
-      status: 400,
-      message: "Invalid email format",
-    };
+    throw new ApiError(400, "Invalid email format");
   }
 
-  // Validate password
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
   if (!passwordRegex.test(password)) {
-    throw {
-      status: 400,
-      message:
-        "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.",
-    };
+    throw new ApiError(
+      400,
+      "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
+    );
   }
 
-  // Check if email already exists
   const existingUser = await User.findOne({
     where: { email },
   });
 
   if (existingUser) {
-    throw {
-      status: 409,
-      message: "Email already registered",
-    };
+    throw new ApiError(409, "Email already registered");
   }
 
-  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create user
   await User.create({
     name,
     email,
@@ -60,38 +45,29 @@ export const registerUser = async ({ name, email, password }) => {
     message: "User registered successfully",
   };
 };
+
 export const loginUser = async ({ email, password }) => {
-  // Validate input
   if (!email || !password) {
-    throw {
-      status: 400,
-      message: "Email and password are required",
-    };
+    throw new ApiError(400, "Email and password are required");
   }
 
-  // Find user
   const user = await User.findOne({
     where: { email },
   });
 
   if (!user) {
-    throw {
-      status: 401,
-      message: "Invalid email or password",
-    };
+    throw new ApiError(401, "Invalid email or password");
   }
 
-  // Compare password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+  const isPasswordValid = await bcrypt.compare(
+    password,
+    user.password
+  );
 
   if (!isPasswordValid) {
-    throw {
-      status: 401,
-      message: "Invalid email or password",
-    };
+    throw new ApiError(401, "Invalid email or password");
   }
 
-  // Generate JWT
   const token = jwt.sign(
     {
       id: user.id,
@@ -105,8 +81,7 @@ export const loginUser = async ({ email, password }) => {
   return {
     success: true,
     message: "Login successful",
-    token
-    
+    token,
   };
 };
 
@@ -116,10 +91,7 @@ export const getMe = async (userId) => {
   });
 
   if (!user) {
-    throw {
-      status: 404,
-      message: "User not found",
-    };
+    throw new ApiError(404, "User not found");
   }
 
   return {

@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 export const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  // Check if Authorization header exists
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,
@@ -16,7 +15,6 @@ export const authenticate = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Store user ID from JWT payload
     req.user = decoded;
 
     next();
