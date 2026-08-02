@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import morgan from "morgan";
+import { errorHandler } from "./middleware/errorMiddleware.js";
 const app = express();
 
 const allowedOrigins = [
@@ -29,4 +30,6 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 
+
+app.use(errorHandler);
 export default app;
