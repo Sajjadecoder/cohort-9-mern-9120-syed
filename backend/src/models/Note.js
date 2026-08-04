@@ -19,6 +19,16 @@ const Note = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+    },
   },
   {
     tableName: "notes",
