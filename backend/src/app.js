@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import morgan from "morgan";
-import { errorHandler } from "./middleware/errorMiddleware.js";
+import errorHandler from "./middleware/errorHandler.js";
 const app = express();
 
 const allowedOrigins = [
