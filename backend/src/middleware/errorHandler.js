@@ -1,4 +1,6 @@
-import { UniqueConstraintError } from "sequelize";
+import Sequelize from "sequelize";
+
+const { UniqueConstraintError } = Sequelize;
 import ApiError from "../utils/ApiError.js";
 import logger from "../config/logger.js";
 
