@@ -23,12 +23,14 @@ const findOwnedNote = async (noteId, userId) => {
   return note;
 };
 
-export const createNote = async (userId, { title, content }) => {
-  if (!title || !title.trim()) {
+export const createNote = async (userId, payload) => {
+  const { title, content } = payload ?? {};
+
+  if (typeof title !== "string" || !title.trim()) {
     throw new ApiError(400, "Title is required");
   }
 
-  if (!content || !content.trim()) {
+  if (typeof content !== "string" || !content.trim()) {
     throw new ApiError(400, "Content is required");
   }
 
@@ -47,10 +49,11 @@ export const createNote = async (userId, { title, content }) => {
   };
 };
 
-export const getNotes = async (userId, { search } = {}) => {
+export const getNotes = async (userId, query = {}) => {
+  const { search } = query;
   const where = { userId };
 
-  if (search && search.trim()) {
+  if (typeof search === "string" && search.trim()) {
     where.title = { [Op.iLike]: `%${search.trim()}%` };
   }
 
@@ -74,18 +77,19 @@ export const getNoteById = async (userId, noteId) => {
   };
 };
 
-export const updateNote = async (userId, noteId, { title, content }) => {
+export const updateNote = async (userId, noteId, payload) => {
+  const { title, content } = payload ?? {};
   const note = await findOwnedNote(noteId, userId);
 
   if (title !== undefined) {
-    if (!title.trim()) {
+    if (typeof title !== "string" || !title.trim()) {
       throw new ApiError(400, "Title cannot be empty");
     }
     note.title = title.trim();
   }
 
   if (content !== undefined) {
-    if (!content.trim()) {
+    if (typeof content !== "string" || !content.trim()) {
       throw new ApiError(400, "Content cannot be empty");
     }
     note.content = content;
