@@ -1,9 +1,11 @@
 import jwt from "jsonwebtoken";
+import logger from "../config/logger.js";
 
 export const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    logger.warn({}, "Access denied - no token provided");
     return res.status(401).json({
       success: false,
       message: "Access denied. No token provided.",
@@ -19,6 +21,7 @@ export const authenticate = (req, res, next) => {
 
     next();
   } catch (error) {
+    logger.warn({ error: error.message }, "Invalid or expired token provided");
     return res.status(401).json({
       success: false,
       message: "Invalid or expired token.",

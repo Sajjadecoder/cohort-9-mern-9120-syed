@@ -5,6 +5,7 @@ import {
   updateNote,
   deleteNote,
 } from "../services/noteService.js";
+import logger from "../config/logger.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -18,6 +19,7 @@ export const create = async (req, res, next) => {
 
 export const getAll = async (req, res, next) => {
   try {
+    logger.info({ userId: req.user.id }, "Fetching all notes");
     const result = await getNotes(req.user.id, req.query);
 
     return res.status(200).json(result);
@@ -28,6 +30,7 @@ export const getAll = async (req, res, next) => {
 
 export const getOne = async (req, res, next) => {
   try {
+    logger.info({ userId: req.user.id, noteId: req.params.id }, "Fetching note");
     const result = await getNoteById(req.user.id, req.params.id);
 
     return res.status(200).json(result);
