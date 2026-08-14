@@ -2,6 +2,7 @@ import {
   registerUser,
   loginUser,
   getMe,
+  logoutUser,
 } from "../services/authService.js";
 import logger from "../config/logger.js";
 
@@ -37,12 +38,12 @@ export const getCurrentUser = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    logger.info({ userId: req.user.id }, "User logged out");
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(" ")[1];
 
-    return res.status(200).json({
-      success: true,
-      message: "Logout successful",
-    });
+    const result = await logoutUser(req.user.id, token);
+
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }

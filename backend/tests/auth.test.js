@@ -3,7 +3,7 @@ import { expect } from "chai";
 import jwt from "jsonwebtoken";
 import request from "supertest";
 import app from "../src/app.js";
-import sequelize, { User } from "../src/models/index.js";
+import sequelize, { User, TokenBlacklist } from "../src/models/index.js";
 
 const JWT_SECRET = "test-secret";
 
@@ -28,6 +28,7 @@ before(async () => {
 });
 
 beforeEach(async () => {
+  await TokenBlacklist.destroy({ where: {} });
   await User.destroy({ where: {} });
 });
 
@@ -192,6 +193,55 @@ describe("Auth API", () => {
       expect(res.status).to.equal(404);
       expect(res.body.success).to.equal(false);
       expect(res.body.message).to.equal("User not found");
+    });
+  });
+
+  describe("POST /api/auth/logout", () => {
+    it("should reject logout without a bearer token", async () => {
+      const res = await request(app).post("/api/auth/logout");
+
+      expect(res.status).to.equal(401);
+      expect(res.body.success).to.equal(false);
+      expect(res.body.message).to.equal("Access denied. No token provided.");
+    });
+
+    it("should revoke a valid token on logout", async () => {
+      const user = await createUser({ email: `logout.${Date.now()}@example.com` });
+      const token = createToken(user);
+
+      // Logout should succeed
+      const logoutRes = await request(app)
+        .post("/api/auth/logout")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(logoutRes.status).to.equal(200);
+      expect(logoutRes.body.success).to.equal(true);
+      expect(logoutRes.body.message).to.equal("Token revoked successfully. You are now logged out.");
+
+      // Token should be blacklisted in database
+      const blacklistedToken = await TokenBlacklist.findOne({
+        where: { token },
+      });
+      expect(blacklistedToken).to.not.be.null;
+    });
+
+    it("should reject access with a revoked token", async () => {
+      const user = await createUser({ email: `revoked.${Date.now()}@example.com` });
+      const token = createToken(user);
+
+      // Logout and revoke the token
+      await request(app)
+        .post("/api/auth/logout")
+        .set("Authorization", `Bearer ${token}`);
+
+      // Try to access protected endpoint with revoked token
+      const res = await request(app)
+        .get("/api/auth/me")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).to.equal(401);
+      expect(res.body.success).to.equal(false);
+      expect(res.body.message).to.equal("Token has been revoked. Please login again.");
     });
   });
 });

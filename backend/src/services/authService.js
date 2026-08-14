@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { User } from "../models/index.js";
+import { User, TokenBlacklist } from "../models/index.js";
 import ApiError from "../utils/ApiError.js";
 import logger from "../config/logger.js";
 
@@ -103,5 +103,28 @@ export const getMe = async (userId) => {
   return {
     success: true,
     user,
+  };
+};
+
+export const logoutUser = async (userId, token) => {
+  const decoded = jwt.decode(token);
+
+  if (!decoded || !decoded.exp) {
+    throw new ApiError(400, "Invalid token");
+  }
+
+  const expiresAt = new Date(decoded.exp * 1000);
+
+  await TokenBlacklist.create({
+    token,
+    userId,
+    expiresAt,
+  });
+
+  logger.info({ userId }, "Token revoked and added to blacklist");
+
+  return {
+    success: true,
+    message: "Token revoked successfully. You are now logged out.",
   };
 };
