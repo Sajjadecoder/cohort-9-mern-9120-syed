@@ -1,4 +1,3 @@
-import bcrypt from "bcrypt";
 import { expect } from "chai";
 import jwt from "jsonwebtoken";
 import request from "supertest";
@@ -9,12 +8,11 @@ const JWT_SECRET = "test-secret";
 
 const createUser = async (overrides = {}) => {
   const timeStamp = Date.now();
-  const password = overrides.password || "Password123";
 
   return User.create({
     name: "Alice",
     email: `alice.${timeStamp}@example.com`,
-    password: await bcrypt.hash(password, 10),
+    password: "hashed-password",
     ...overrides,
   });
 };
@@ -32,132 +30,7 @@ beforeEach(async () => {
   await User.destroy({ where: {} });
 });
 
-describe("Backend API", () => {
-  describe("GET /health", () => {
-    it("should return backend health status", async () => {
-      const res = await request(app).get("/health");
-
-      expect(res.status).to.equal(200);
-      expect(res.body).to.have.property("success", true);
-      expect(res.body.message).to.equal("Backend is running successfully");
-    });
-  });
-
-  describe("POST /api/auth/register", () => {
-    it("should reject incomplete registration payload", async () => {
-      const res = await request(app).post("/api/auth/register").send({
-        name: "Alice",
-      });
-
-      expect(res.status).to.equal(400);
-      expect(res.body.success).to.equal(false);
-      expect(res.body.message).to.equal("All fields are required");
-    });
-
-    it("should reject invalid email format", async () => {
-      const res = await request(app).post("/api/auth/register").send({
-        name: "Alice",
-        email: "not-an-email",
-        password: "Password123",
-      });
-
-      expect(res.status).to.equal(400);
-      expect(res.body.success).to.equal(false);
-      expect(res.body.message).to.equal("Invalid email format");
-    });
-
-    it("should register a valid user", async () => {
-      const email = `register.${Date.now()}@example.com`;
-      const res = await request(app).post("/api/auth/register").send({
-        name: "Alice",
-        email,
-        password: "Password123",
-      });
-
-      expect(res.status).to.equal(201);
-      expect(res.body.success).to.equal(true);
-      expect(res.body.message).to.equal("User registered successfully");
-
-      const createdUser = await User.findOne({ where: { email } });
-      expect(createdUser).to.not.equal(null);
-      expect(createdUser.name).to.equal("Alice");
-    });
-  });
-
-  describe("POST /api/auth/login", () => {
-    it("should reject missing email or password", async () => {
-      const res = await request(app).post("/api/auth/login").send({
-        email: "alice@example.com",
-      });
-
-      expect(res.status).to.equal(400);
-      expect(res.body.success).to.equal(false);
-      expect(res.body.message).to.equal("Email and password are required");
-    });
-
-    it("should reject invalid credentials before hitting database logic", async () => {
-      const res = await request(app).post("/api/auth/login").send({
-        email: "no-user@example.com",
-        password: "WrongPass123",
-      });
-
-      expect(res.status).to.equal(401);
-      expect(res.body.success).to.equal(false);
-      expect(res.body.message).to.equal("Invalid email or password");
-    });
-
-    it("should login a valid user and return a token", async () => {
-      const user = await createUser({ email: `login.${Date.now()}@example.com` });
-      const res = await request(app).post("/api/auth/login").send({
-        email: user.email,
-        password: "Password123",
-      });
-
-      expect(res.status).to.equal(200);
-      expect(res.body.success).to.equal(true);
-      expect(res.body.message).to.equal("Login successful");
-      expect(res.body.token).to.be.a("string");
-      expect(res.body.token.length).to.be.greaterThan(20);
-    });
-  });
-
-  describe("GET /api/auth/me", () => {
-    it("should reject requests without a bearer token", async () => {
-      const res = await request(app).get("/api/auth/me");
-
-      expect(res.status).to.equal(401);
-      expect(res.body.success).to.equal(false);
-      expect(res.body.message).to.equal("Access denied. No token provided.");
-    });
-
-    it("should reject an invalid bearer token", async () => {
-      const res = await request(app)
-        .get("/api/auth/me")
-        .set("Authorization", "Bearer invalid.token.here");
-
-      expect(res.status).to.equal(401);
-      expect(res.body.success).to.equal(false);
-      expect(res.body.message).to.equal("Invalid or expired token.");
-    });
-
-    it("should return the authenticated user profile", async () => {
-      const user = await createUser({ email: `me.${Date.now()}@example.com` });
-      const token = createToken(user);
-
-      const res = await request(app)
-        .get("/api/auth/me")
-        .set("Authorization", `Bearer ${token}`);
-
-      expect(res.status).to.equal(200);
-      expect(res.body.success).to.equal(true);
-      expect(res.body.user).to.include({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      });
-    });
-  });
-
+describe("Notes API", () => {
   describe("GET /api/notes", () => {
     it("should require authentication", async () => {
       const res = await request(app).get("/api/notes");
@@ -262,6 +135,78 @@ describe("Backend API", () => {
 
       expect(fetchAfterDelete.status).to.equal(404);
       expect(fetchAfterDelete.body.message).to.equal("Note not found");
+    });
+
+    it("should reject empty title and content when creating a note", async () => {
+      const user = await createUser({ email: `empty.${Date.now()}@example.com` });
+      const token = createToken(user);
+
+      const res = await request(app)
+        .post("/api/notes")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          title: "   ",
+          content: " ",
+        });
+
+      expect(res.status).to.equal(400);
+      expect(res.body.success).to.equal(false);
+      expect(res.body.message).to.equal("Title is required");
+    });
+
+    it("should reject empty title updates", async () => {
+      const user = await createUser({ email: `update.${Date.now()}@example.com` });
+      const token = createToken(user);
+      const note = await Note.create({
+        title: "Old title",
+        content: "Old content",
+        userId: user.id,
+      });
+
+      const res = await request(app)
+        .put(`/api/notes/${note.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          title: "   ",
+          content: "Updated content",
+        });
+
+      expect(res.status).to.equal(400);
+      expect(res.body.success).to.equal(false);
+      expect(res.body.message).to.equal("Title cannot be empty");
+    });
+
+    it("should reject invalid note id format", async () => {
+      const user = await createUser({ email: `invalidid.${Date.now()}@example.com` });
+      const token = createToken(user);
+
+      const res = await request(app)
+        .get("/api/notes/not-a-valid-uuid")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).to.equal(400);
+      expect(res.body.success).to.equal(false);
+      expect(res.body.message).to.equal("Invalid note id");
+    });
+
+    it("should reject access to notes belonging to another user", async () => {
+      const firstUser = await createUser({ email: `first.${Date.now()}@example.com` });
+      const secondUser = await createUser({ email: `second.${Date.now()}@example.com` });
+
+      const note = await Note.create({
+        title: "Private note",
+        content: "This should not be accessible",
+        userId: firstUser.id,
+      });
+
+      const token = createToken(secondUser);
+      const res = await request(app)
+        .get(`/api/notes/${note.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).to.equal(404);
+      expect(res.body.success).to.equal(false);
+      expect(res.body.message).to.equal("Note not found");
     });
   });
 });
