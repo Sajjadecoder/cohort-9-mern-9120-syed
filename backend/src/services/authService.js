@@ -41,7 +41,7 @@ export const registerUser = async ({ name, email, password }) => {
     password: hashedPassword,
   });
 
-  logger.info({ userId: newUser.id, email }, "User registered successfully");
+  logger.info({ userId: newUser.id }, "User registered successfully");
 
   return {
     success: true,
@@ -68,7 +68,7 @@ export const loginUser = async ({ email, password }) => {
   );
 
   if (!isPasswordValid) {
-    logger.warn({ email }, "Failed login attempt - invalid password");
+    logger.warn({}, "Failed login attempt - invalid password");
     throw new ApiError(401, "Invalid email or password");
   }
 
@@ -82,7 +82,7 @@ export const loginUser = async ({ email, password }) => {
     }
   );
 
-  logger.info({ userId: user.id, email }, "User logged in successfully");
+  logger.info({ userId: user.id }, "User logged in successfully");
 
   return {
     success: true,
