@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { User } from "../models/index.js";
+import { User, TokenBlacklist } from "../models/index.js";
 import ApiError from "../utils/ApiError.js";
+import logger from "../config/logger.js";
 
 export const registerUser = async ({ name, email, password }) => {
   if (!name || !email || !password) {
@@ -34,11 +35,13 @@ export const registerUser = async ({ name, email, password }) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  await User.create({
+  const newUser = await User.create({
     name,
     email,
     password: hashedPassword,
   });
+
+  logger.info({ userId: newUser.id }, "User registered successfully");
 
   return {
     success: true,
@@ -65,6 +68,7 @@ export const loginUser = async ({ email, password }) => {
   );
 
   if (!isPasswordValid) {
+    logger.warn({}, "Failed login attempt - invalid password");
     throw new ApiError(401, "Invalid email or password");
   }
 
@@ -77,6 +81,8 @@ export const loginUser = async ({ email, password }) => {
       expiresIn: "7d",
     }
   );
+
+  logger.info({ userId: user.id }, "User logged in successfully");
 
   return {
     success: true,
@@ -97,5 +103,28 @@ export const getMe = async (userId) => {
   return {
     success: true,
     user,
+  };
+};
+
+export const logoutUser = async (userId, token) => {
+  const decoded = jwt.decode(token);
+
+  if (!decoded || !decoded.exp) {
+    throw new ApiError(400, "Invalid token");
+  }
+
+  const expiresAt = new Date(decoded.exp * 1000);
+
+  await TokenBlacklist.create({
+    token,
+    userId,
+    expiresAt,
+  });
+
+  logger.info({ userId }, "Token revoked and added to blacklist");
+
+  return {
+    success: true,
+    message: "Token revoked successfully. You are now logged out.",
   };
 };

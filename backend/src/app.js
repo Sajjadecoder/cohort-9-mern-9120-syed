@@ -1,8 +1,11 @@
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
+import noteRoutes from "./routes/noteRoutes.js";
 import morgan from "morgan";
-import { errorHandler } from "./middleware/errorMiddleware.js";
+import pinoHttp from "pino-http";
+import errorHandler from "./middleware/errorHandler.js";
+import logger from "./config/logger.js";
 const app = express();
 
 const allowedOrigins = [
@@ -17,6 +20,7 @@ app.use(cors(
     }
 ));
 app.use(express.json());
+app.use(pinoHttp({ logger }));
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
@@ -29,6 +33,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/notes",noteRoutes);
 
 
 app.use(errorHandler);

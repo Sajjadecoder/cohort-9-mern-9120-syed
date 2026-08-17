@@ -3,9 +3,8 @@ import sequelize from "./database.js";
 
 const { DataTypes } = Sequelize;
 
-
-const User = sequelize.define(
-  "User",
+const TokenBlacklist = sequelize.define(
+  "TokenBlacklist",
   {
     id: {
       type: DataTypes.UUID,
@@ -13,29 +12,31 @@ const User = sequelize.define(
       primaryKey: true,
     },
 
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-
-    email: {
-      type: DataTypes.STRING,
+    token: {
+      type: DataTypes.TEXT,
       allowNull: false,
       unique: true,
-      validate: {
-        isEmail: true,
-      },
     },
 
-    password: {
-      type: DataTypes.STRING,
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+    },
+
+    expiresAt: {
+      type: DataTypes.DATE,
       allowNull: false,
     },
   },
   {
-    tableName: "users",
+    tableName: "token_blacklist",
     timestamps: true,
   }
 );
 
-export default User;
+export default TokenBlacklist;
