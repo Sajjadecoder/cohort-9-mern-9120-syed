@@ -20,7 +20,17 @@ export const login = async (req, res, next) => {
   try {
     const result = await loginUser(req.body);
 
-    return res.status(200).json(result);
+    res.cookie("token", result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: result.success,
+      message: result.message,
+    });
   } catch (error) {
     next(error);
   }
@@ -41,9 +51,14 @@ export const logout = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader.split(" ")[1];
 
-    const result = await logoutUser(req.user.id, token);
+    await logoutUser(req.user.id, token);
 
-    return res.status(200).json(result);
+    res.clearCookie("token");
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
   } catch (error) {
     next(error);
   }

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import api, { saveAuthToken } from "../services/api";
+import api from "../services/api";
+import { AuthContext } from "../contexts/AuthContext";
 
 const initialForm = {
   name: "",
@@ -11,6 +12,7 @@ const initialForm = {
 
 function AuthPage({ mode = "login" }) {
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
   const isSignup = mode === "signup";
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
@@ -28,17 +30,16 @@ function AuthPage({ mode = "login" }) {
       const payload = isSignup ? form : { email: form.email, password: form.password };
       const endpoint = isSignup ? "/auth/register" : "/auth/login";
 
-      const response = await api.post(endpoint, payload);
+      await api.post(endpoint, payload);
 
-      if (response.data.token) {
-        saveAuthToken(response.data.token);
+      if (isSignup) {
+        toast.success("Account created successfully. Please log in.");
+        navigate("/login", { replace: true });
+      } else {
+        toast.success("Logged in successfully.");
+        await login();
+        navigate("/dashboard", { replace: true });
       }
-
-      toast.success(
-        isSignup ? "Account created successfully." : "Logged in successfully."
-      );
-
-      navigate("/dashboard", { replace: true });
     } catch (error) {
       const message =
         error.response?.data?.message ||

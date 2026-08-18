@@ -3,9 +3,16 @@ import logger from "../config/logger.js";
 import { TokenBlacklist } from "../models/index.js";
 
 export const authenticate = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  let token = req.cookies?.token;
+  
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    }
+  }
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!token) {
     logger.warn({}, "Access denied - no token provided");
     return res.status(401).json({
       success: false,
@@ -13,12 +20,9 @@ export const authenticate = async (req, res, next) => {
     });
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Check if token is blacklisted
     const blacklistedToken = await TokenBlacklist.findOne({
       where: { token },
     });

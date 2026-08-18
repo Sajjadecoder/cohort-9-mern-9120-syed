@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 import morgan from "morgan";
@@ -17,9 +18,11 @@ const allowedOrigins = [
 app.use(cors(
     {
         origin: allowedOrigins,
+        credentials: true,
     }
 ));
 app.use(express.json());
+app.use(cookieParser());
 app.use(pinoHttp({ logger }));
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));

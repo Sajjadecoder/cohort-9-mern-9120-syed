@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import ProfilePage from "../../src/pages/ProfilePage";
+import { AuthProvider } from "../../src/contexts/AuthContext";
 import api from "../../src/services/api";
 
 jest.mock("../../src/services/api", () => ({
@@ -9,7 +10,6 @@ jest.mock("../../src/services/api", () => ({
     get: jest.fn(),
     post: jest.fn(),
   },
-  clearAuthToken: jest.fn(),
 }));
 
 describe("ProfilePage", () => {
@@ -28,11 +28,13 @@ describe("ProfilePage", () => {
 
   it("renders user details from the profile API", async () => {
     render(
-      <MemoryRouter initialEntries={["/profile"]}>
-        <Routes>
-          <Route path="/profile" element={<ProfilePage />} />
-        </Routes>
-      </MemoryRouter>
+      <AuthProvider>
+        <MemoryRouter initialEntries={["/profile"]}>
+          <Routes>
+            <Route path="/profile" element={<ProfilePage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
@@ -47,11 +49,13 @@ describe("ProfilePage", () => {
     api.post.mockResolvedValue({ data: { success: true } });
 
     render(
-      <MemoryRouter initialEntries={["/profile"]}>
-        <Routes>
-          <Route path="/profile" element={<ProfilePage />} />
-        </Routes>
-      </MemoryRouter>
+      <AuthProvider>
+        <MemoryRouter initialEntries={["/profile"]}>
+          <Routes>
+            <Route path="/profile" element={<ProfilePage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {

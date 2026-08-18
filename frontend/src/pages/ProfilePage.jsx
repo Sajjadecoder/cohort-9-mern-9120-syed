@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import api, { clearAuthToken } from "../services/api";
+import api from "../services/api";
+import { AuthContext } from "../contexts/AuthContext";
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +29,7 @@ function ProfilePage() {
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
-      clearAuthToken();
+      await logout();
       toast.success("You have been logged out.");
       navigate("/login", { replace: true });
     } catch (error) {

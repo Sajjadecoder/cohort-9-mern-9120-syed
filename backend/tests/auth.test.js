@@ -209,7 +209,6 @@ describe("Auth API", () => {
       const user = await createUser({ email: `logout.${Date.now()}@example.com` });
       const token = createToken(user);
 
-      // Logout should succeed
       const logoutRes = await request(app)
         .post("/api/auth/logout")
         .set("Authorization", `Bearer ${token}`);
@@ -218,7 +217,6 @@ describe("Auth API", () => {
       expect(logoutRes.body.success).to.equal(true);
       expect(logoutRes.body.message).to.equal("Token revoked successfully. You are now logged out.");
 
-      // Token should be blacklisted in database
       const blacklistedToken = await TokenBlacklist.findOne({
         where: { token },
       });
@@ -229,12 +227,10 @@ describe("Auth API", () => {
       const user = await createUser({ email: `revoked.${Date.now()}@example.com` });
       const token = createToken(user);
 
-      // Logout and revoke the token
       await request(app)
         .post("/api/auth/logout")
         .set("Authorization", `Bearer ${token}`);
 
-      // Try to access protected endpoint with revoked token
       const res = await request(app)
         .get("/api/auth/me")
         .set("Authorization", `Bearer ${token}`);

@@ -1,14 +1,20 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
+import { useContext } from "react";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import NoteEditorPage from "./pages/NoteEditorPage";
 import ProfilePage from "./pages/ProfilePage";
-
-const isAuthenticated = () => Boolean(localStorage.getItem("token"));
+import { AuthContext } from "./contexts/AuthContext";
 
 function ProtectedRoute({ children }) {
-  if (!isAuthenticated()) {
+  const { isAuthenticated, isLoading } = useContext(AuthContext);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
@@ -16,7 +22,13 @@ function ProtectedRoute({ children }) {
 }
 
 function PublicRoute({ children }) {
-  if (isAuthenticated()) {
+  const { isAuthenticated, isLoading } = useContext(AuthContext);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 

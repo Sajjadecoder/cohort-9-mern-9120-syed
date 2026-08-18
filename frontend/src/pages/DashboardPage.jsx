@@ -78,7 +78,6 @@ function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-sky-100 px-4 py-8 text-slate-800 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        {/* Header */}
         <header className="mb-8 rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_20px_45px_rgba(37,99,235,0.08)] backdrop-blur-sm">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
@@ -121,7 +120,6 @@ function DashboardPage() {
             </div>
           </div>
 
-          {/* Search */}
           {!loading && notes.length > 0 && (
             <div className="mt-5 border-t border-slate-100 pt-5">
               <div className="relative max-w-sm">
