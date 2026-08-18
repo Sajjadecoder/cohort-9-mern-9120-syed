@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { NotebookPen, Plus, Trash2, UserCircle2, Search, Clock, AlertTriangle, X } from "lucide-react";
+import {
+  NotebookPen,
+  Plus,
+  Trash2,
+  UserCircle2,
+  Search,
+  Clock,
+  AlertTriangle,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import api from "../services/api";
@@ -12,6 +21,12 @@ const ACCENTS = [
   { bar: "bg-rose-500", chip: "bg-rose-50 text-rose-600" },
 ];
 
+const getPlainText = (html = "") => {
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  return container.textContent || container.innerText || "";
+};
+
 function DashboardPage() {
   const navigate = useNavigate();
   const [notes, setNotes] = useState([]);
@@ -23,10 +38,13 @@ function DashboardPage() {
   const fetchNotes = async () => {
     try {
       setLoading(true);
+
       const response = await api.get("/notes");
       setNotes(response.data.notes || []);
     } catch (error) {
-      const message = error.response?.data?.message || "Unable to fetch notes.";
+      const message =
+        error.response?.data?.message || "Unable to fetch notes.";
+
       toast.error(message);
     } finally {
       setLoading(false);
@@ -40,11 +58,15 @@ function DashboardPage() {
   const handleDelete = async (noteId) => {
     try {
       setDeleting(true);
+
       await api.delete(`/notes/${noteId}`);
+
       toast.success("Note deleted.");
       fetchNotes();
     } catch (error) {
-      const message = error.response?.data?.message || "Unable to delete note.";
+      const message =
+        error.response?.data?.message || "Unable to delete note.";
+
       toast.error(message);
     } finally {
       setDeleting(false);
@@ -68,10 +90,14 @@ function DashboardPage() {
 
   const filteredNotes = notes.filter((note) => {
     const q = query.trim().toLowerCase();
+
     if (!q) return true;
+
+    const contentText = getPlainText(note.content);
+
     return (
       note.title?.toLowerCase().includes(q) ||
-      note.content?.toLowerCase().includes(q)
+      contentText.toLowerCase().includes(q)
     );
   });
 
@@ -84,12 +110,17 @@ function DashboardPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
                 <NotebookPen className="h-6 w-6" />
               </div>
+
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.28em] text-blue-600">
                   Dashboard
                 </p>
+
                 <div className="mt-1 flex items-center gap-2.5">
-                  <h1 className="text-3xl font-bold text-slate-900">Your notes</h1>
+                  <h1 className="text-3xl font-bold text-slate-900">
+                    Your notes
+                  </h1>
+
                   {!loading && notes.length > 0 && (
                     <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-sm font-semibold text-blue-600">
                       {notes.length}
@@ -124,6 +155,7 @@ function DashboardPage() {
             <div className="mt-5 border-t border-slate-100 pt-5">
               <div className="relative max-w-sm">
                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
                 <input
                   type="text"
                   value={query}
@@ -145,6 +177,7 @@ function DashboardPage() {
               >
                 <div className="mb-4 h-3 w-16 rounded-full bg-slate-100" />
                 <div className="mb-3 h-5 w-3/4 rounded-full bg-slate-100" />
+
                 <div className="space-y-2">
                   <div className="h-3 w-full rounded-full bg-slate-100" />
                   <div className="h-3 w-full rounded-full bg-slate-100" />
@@ -158,10 +191,15 @@ function DashboardPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600">
               <NotebookPen className="h-7 w-7" />
             </div>
-            <p className="text-xl font-semibold text-slate-800">No notes yet</p>
+
+            <p className="text-xl font-semibold text-slate-800">
+              No notes yet
+            </p>
+
             <p className="mt-2 text-sm text-slate-500">
               Create your first note to get started.
             </p>
+
             <button
               type="button"
               onClick={() => navigate("/notes/new")}
@@ -176,7 +214,11 @@ function DashboardPage() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
               <Search className="h-6 w-6" />
             </div>
-            <p className="text-lg font-semibold text-slate-700">No matches</p>
+
+            <p className="text-lg font-semibold text-slate-700">
+              No matches
+            </p>
+
             <p className="mt-1 text-sm text-slate-500">
               Nothing matches "{query}". Try a different search.
             </p>
@@ -185,6 +227,8 @@ function DashboardPage() {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredNotes.map((note, index) => {
               const accent = ACCENTS[index % ACCENTS.length];
+              const plainContent = getPlainText(note.content);
+
               return (
                 <article
                   key={note.id}
@@ -201,6 +245,7 @@ function DashboardPage() {
                       >
                         Note
                       </p>
+
                       <h2 className="mt-2 line-clamp-2 text-xl font-semibold text-slate-900">
                         {note.title}
                       </h2>
@@ -217,7 +262,7 @@ function DashboardPage() {
                   </div>
 
                   <p className="line-clamp-5 flex-1 text-sm leading-6 text-slate-600">
-                    {note.content}
+                    {plainContent}
                   </p>
 
                   <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
@@ -257,6 +302,7 @@ function DashboardPage() {
               <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500">
                 <AlertTriangle className="h-5 w-5" />
               </div>
+
               <button
                 type="button"
                 onClick={cancelDelete}
@@ -268,13 +314,19 @@ function DashboardPage() {
               </button>
             </div>
 
-            <h2 id="delete-note-title" className="mt-4 text-lg font-semibold text-slate-900">
+            <h2
+              id="delete-note-title"
+              className="mt-4 text-lg font-semibold text-slate-900"
+            >
               Delete this note?
             </h2>
+
             <p className="mt-1.5 text-sm leading-6 text-slate-500">
               Are you sure you want to delete{" "}
-              <span className="font-medium text-slate-700">"{noteToDelete.title}"</span>?
-              This can't be undone.
+              <span className="font-medium text-slate-700">
+                "{noteToDelete.title}"
+              </span>
+              ? This can't be undone.
             </p>
 
             <div className="mt-6 flex items-center justify-end gap-3">
@@ -286,6 +338,7 @@ function DashboardPage() {
               >
                 Cancel
               </button>
+
               <button
                 type="button"
                 onClick={confirmDelete}
