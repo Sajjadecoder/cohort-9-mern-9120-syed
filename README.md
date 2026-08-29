@@ -422,7 +422,7 @@ Make sure the following are installed:
 
 ```bash
 git clone https://github.com/10pshine-cohort-9/cohort-9-mern-9120-syed
-cd https://github.com/10pshine-cohort-9/cohort-9-mern-9120-syed
+cd  cohort-9-mern-9120-syed
 ```
 
 ### 2. Install Backend Dependencies
@@ -464,6 +464,7 @@ Run the required database migrations or setup scripts provided by the project.
 ### 6. Start the Backend
 
 ```bash
+cd ./backend
 npm run dev
 ```
 
