@@ -215,34 +215,383 @@ The application follows a **client-server architecture**.
 ```text
 ┌──────────────────────────────┐
 │        React Frontend        │
-│                              │
-│  Authentication              │
-│  Dashboard                   │
-│  Notes Management            │
-│  Rich Text Editor            │
-│  User Profile                │
-└──────────────┬───────────────┘
+│                               │
+│  Authentication               │
+│  Dashboard                    │
+│  Notes Management             │
+│  Rich Text Editor             │
+│  User Profile                 │
+└──────────────┬────────────────┘
                │
                │ REST API
                ▼
 ┌──────────────────────────────┐
 │       Node.js Backend        │
-│                              │
-│  Authentication Services     │
-│  Note Services               │
-│  API Routes                  │
-│  Middleware                  │
-│  Exception Handling          │
-│  JWT Authentication          │
-│  Pino Logging                │
-└──────────────┬───────────────┘
+│                               │
+│  Authentication Services      │
+│  Note Services                │
+│  API Routes                   │
+│  Middleware                   │
+│  Exception Handling           │
+│  JWT Authentication           │
+│  Pino Logging                 │
+└──────────────┬────────────────┘
                │
                │ Sequelize
                ▼
 ┌──────────────────────────────┐
 │      PostgreSQL Database     │
-│                              │
-│  Users                       │
-│  Notes                       │
-│  Token Blacklist             │
+│                               │
+│  Users                        │
+│  Notes                        │
+│  Token Blacklist              │
 └──────────────────────────────┘
+```
+
+---
+
+## 🔑 Authentication Flow
+
+The authentication system uses JSON Web Tokens (JWT).
+
+### Registration
+
+1. User submits name, email, and password.
+2. Backend validates the supplied information.
+3. The email is checked for an existing account.
+4. Password is hashed using bcrypt.
+5. User account is stored in the database.
+6. A successful registration response is returned.
+
+### Login
+
+1. User submits email and password.
+2. Backend searches for the corresponding account.
+3. Password is compared against the stored bcrypt hash.
+4. A JWT is generated after successful authentication.
+5. The token is returned to the frontend.
+6. Authenticated requests use the token for authorization.
+
+### Logout
+
+When a user logs out, their JWT is added to a token blacklist along with its expiration time.
+
+Subsequent authentication middleware can use the blacklist to reject revoked tokens.
+
+---
+
+## 📡 Core API Functionality
+
+The backend exposes REST APIs for authentication and note management.
+
+### Authentication
+
+| Operation | Description |
+|---|---|
+| Register | Create a new user account |
+| Login | Authenticate an existing user |
+| Get Profile | Retrieve authenticated user information |
+| Logout | Revoke the current authentication token |
+
+### Notes
+
+| Operation | Description |
+|---|---|
+| Create | Create a new note |
+| Get All | Retrieve the authenticated user's notes |
+| Get By ID | Retrieve a specific owned note |
+| Update | Modify an existing note |
+| Delete | Delete an existing note |
+| Search | Search notes by title |
+
+All note-management operations are protected and scoped to the authenticated user.
+
+---
+
+## 🗄️ Database Design
+
+The application uses PostgreSQL with Sequelize as its ORM.
+
+The primary data entities include:
+
+### User
+
+Stores user account information such as:
+
+- User ID
+- Name
+- Email
+- Hashed password
+- Account creation timestamp
+
+### Note
+
+Stores user-created notes including:
+
+- Note ID
+- Title
+- Content
+- Owner/User ID
+- Creation timestamp
+- Last updated timestamp
+
+### Token Blacklist
+
+Stores revoked JWTs to support secure logout and token invalidation.
+
+The relationship between users and notes ensures that every note belongs to a specific authenticated user.
+
+---
+
+## 🔒 Security
+
+Security is an important part of the application.
+
+The project implements:
+
+- Password hashing with bcrypt
+- JWT-based authentication
+- JWT token expiration
+- Token blacklisting on logout
+- User-specific note ownership checks
+- Input validation
+- Email validation
+- Password-strength validation
+- UUID validation for note identifiers
+- Centralized exception handling
+- Structured security-related logging
+
+Passwords are never stored in plaintext.
+
+---
+
+## 🖥️ Application Screens
+
+### 1. Sign Up / Log In
+
+Provides authentication screens for:
+
+- User registration
+- Existing-user login
+- Authentication validation
+- Redirecting authenticated users to the main application
+
+### 2. Dashboard
+
+The main notes-management screen provides:
+
+- User-specific note listing
+- Note search
+- Create-note functionality
+- Navigation to individual notes
+- Note editing and deletion
+
+### 3. Note Editor
+
+The note editor provides:
+
+- Note title
+- Rich-text content editing
+- Save functionality
+- Cancel functionality
+- Creation of new notes
+- Editing of existing notes
+
+### 4. User Profile
+
+The profile section provides:
+
+- User information
+- Account details
+- Logout functionality
+
+---
+
+## ⚙️ Installation & Setup
+
+### Prerequisites
+
+Make sure the following are installed:
+
+- Node.js
+- npm
+- PostgreSQL
+- Git
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/10pshine-cohort-9/cohort-9-mern-9120-syed
+cd https://github.com/10pshine-cohort-9/cohort-9-mern-9120-syed
+```
+
+### 2. Install Backend Dependencies
+
+```bash
+cd backend
+npm install
+```
+
+### 3. Install Frontend Dependencies
+
+```bash
+cd ../frontend
+npm install
+```
+
+### 4. Configure Environment Variables
+
+Create a `.env` file in the backend directory.
+
+Example:
+
+```env
+PORT=5000
+DATABASE_URL=your_database_connection_string
+JWT_SECRET=your_jwt_secret
+```
+
+Add any additional environment variables required by your local configuration.
+
+> Never commit `.env` files or production secrets to Git.
+
+### 5. Configure PostgreSQL
+
+Create a PostgreSQL database and configure the database connection using the backend environment variables.
+
+Run the required database migrations or setup scripts provided by the project.
+
+### 6. Start the Backend
+
+```bash
+npm run dev
+```
+
+### 7. Start the Frontend
+
+From the frontend directory:
+
+```bash
+npm run dev
+```
+
+The React application can then be accessed through the local development URL provided by Vite.
+
+---
+
+## 🧪 Testing
+
+### Backend
+
+Backend tests use Mocha/Chai.
+
+```bash
+npm test
+```
+
+### Frontend
+
+Frontend tests use Jest.
+
+```bash
+npm test
+```
+
+Test coverage can also be generated using the project's configured testing scripts.
+
+---
+
+## 📊 Code Quality
+
+SonarQube is used to continuously analyze the project and identify potential quality and security issues.
+
+The analysis covers JavaScript code and can be used to monitor:
+
+- Reliability
+- Security
+- Maintainability
+- Code smells
+- Bugs
+- Test coverage
+
+---
+
+## 🔄 Typical User Workflow
+
+```text
+Register
+   │
+   ▼
+Login
+   │
+   ▼
+Dashboard
+   │
+   ├───────────────┐
+   │               │
+   ▼               ▼
+Create Note     Search Notes
+   │               │
+   ▼               ▼
+Note Editor     Open Note
+   │               │
+   └───────┬───────┘
+           ▼
+        Edit Note
+           │
+           ▼
+       Save Changes
+           │
+           ▼
+        Dashboard
+           │
+           ▼
+         Logout
+```
+
+---
+
+## 🎯 Project Objectives
+
+This project was developed to demonstrate practical implementation of a modern full-stack web application while following software engineering best practices.
+
+The main objectives are to demonstrate:
+
+- Full-stack JavaScript development
+- REST API development
+- Secure user authentication
+- Relational database integration
+- ORM-based database operations
+- User-specific data access
+- Rich-text content management
+- Structured application logging
+- Centralized error handling
+- Automated testing
+- Static code-quality analysis
+- Git-based development workflow
+
+---
+
+## 🔮 Potential Future Enhancements
+
+The architecture can be extended with additional functionality such as:
+
+- Real-time note synchronization using Socket.IO
+- Note export and import
+- Advanced search and filtering
+- Note categories and tags
+- Note sharing
+- Pagination
+- Sorting and filtering options
+- Password reset functionality
+- Email verification
+- Refresh-token authentication
+- Enhanced user profile management
+
+---
+
+## 👨‍💻 Development
+
+The project follows a separation of concerns between the frontend, backend services, database layer, authentication, logging, and error handling.
+
+This makes the application easier to test, maintain, extend, and deploy as additional functionality is introduced.
