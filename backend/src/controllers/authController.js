@@ -4,7 +4,6 @@ import {
   getMe,
   logoutUser,
 } from "../services/authService.js";
-import logger from "../config/logger.js";
 
 export const register = async (req, res, next) => {
   try {

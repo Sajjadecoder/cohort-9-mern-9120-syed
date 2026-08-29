@@ -4,14 +4,25 @@ import { User, TokenBlacklist } from "../models/index.js";
 import ApiError from "../utils/ApiError.js";
 import logger from "../config/logger.js";
 
+
 export const registerUser = async ({ name, email, password }) => {
   if (!name || !email || !password) {
     throw new ApiError(400, "All fields are required");
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isValidEmail = (email) => {
+    const atIndex = email.indexOf("@");
+    const dotIndex = email.lastIndexOf(".");
 
-  if (!emailRegex.test(email)) {
+    return (
+      atIndex > 0 &&
+      dotIndex > atIndex + 1 &&
+      dotIndex < email.length - 1 &&
+      !/\s/.test(email)
+    );
+  };
+
+  if (!isValidEmail(email)) {
     throw new ApiError(400, "Invalid email format");
   }
 
@@ -48,6 +59,8 @@ export const registerUser = async ({ name, email, password }) => {
     message: "User registered successfully",
   };
 };
+
+
 
 export const loginUser = async ({ email, password }) => {
   if (!email || !password) {

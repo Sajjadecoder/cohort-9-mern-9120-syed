@@ -6,16 +6,12 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
-async function startServer() {
-  try {
-    await sequelize.authenticate();
-    await sequelize.sync();
+try {
+  await sequelize.authenticate();
+  await sequelize.sync();
 
-    app.listen(PORT);
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
+  app.listen(PORT);
+} catch (error) {
+  console.error(error);
+  process.exit(1);
 }
-
-startServer();
